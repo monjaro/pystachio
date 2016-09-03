@@ -31,11 +31,15 @@ class Environment(Namable):
     for key, val in d.items():
       val = Environment.wrap(val)
       rkey = Ref.wrap(key)
-      if isinstance(val, Environment):
-        for vkey, vval in val._table.items():
-          self._table[rkey + vkey] = vval
-      else:
-        self._table[rkey] = val
+
+      # 8s -> 5.3s (with no other caching).
+      self._table[rkey] = val
+
+      # if isinstance(val, Environment):
+      #   for vkey, vval in val._table.items():
+      #     self._table[rkey + vkey] = vval
+      # else:
+      #   self._table[rkey] = val
 
   def _assimilate_table(self, mt):
     for key, val in mt._table.items():
