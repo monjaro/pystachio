@@ -126,7 +126,12 @@ class StructFactory(TypeFactory):
       assert isinstance(param, tuple)
     typemap = dict((attr, TypeSignature.deserialize(param, type_dict))
                    for attr, param in parameters)
-    attributes = {'TYPEMAP': typemap}
+
+    normalized_params = tuple(sorted([(attr, sig.serialize()) for attr, sig in typemap.items()]))
+    attributes = {
+      'TYPEMAP': typemap,
+      'TYPEPARAMS': normalized_params,
+    }
     return TypeMetaclass(str(name), (Structural,), attributes)
 
 
@@ -272,9 +277,12 @@ class Structural(Object, Type, Namable):
 
   @classmethod
   def type_parameters(cls):
-    attrs = []
-    if hasattr(cls, 'TYPEMAP'):
-      attrs = sorted([(attr, sig.serialize()) for attr, sig in cls.TYPEMAP.items()])
+    attrs = ()
+    # 4.9 -> 2.3
+    if hasattr(cls, 'TYPEPARAMS'):
+      attrs = cls.TYPEPARAMS
+    elif hasattr(cls, 'TYPEMAP'):
+      attrs = tuple(sorted([(attr, sig.serialize()) for attr, sig in cls.TYPEMAP.items()]))
     return (cls.__name__, tuple(attrs))
 
   @classmethod

@@ -136,6 +136,7 @@ class TypeMetaclass(type):
       return False
     if cls.__name__ != other.__class__.__name__:
       return False
+
     return cls.type_factory() == other.type_factory() and (
       cls.type_parameters() == other.type_parameters())
 
@@ -145,7 +146,7 @@ class TypeMetaclass(type):
         name (str): the name of the new type.
         parents (list(str)): a list of superclasses.
         attributes: (???): a map from name to value for "parameters" for defining
-           the new type. 
+           the new type.
     """
     return type.__new__(mcls, name, parents, attributes)
 
