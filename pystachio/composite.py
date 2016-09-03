@@ -154,7 +154,7 @@ class StructMetaclass(type):
 StructMetaclassWrapper = StructMetaclass('StructMetaclassWrapper', (object,), {})
 class Structural(Object, Type, Namable):
   """A Structural base type for composite objects."""
-  __slots__ = ('_schema_data',)
+  __slots__ = ('_schema_data', '_self_scope')
 
   def __init__(self, *args, **kw):
     self._schema_data = frozendict((attr, value.default) for (attr, value) in self.TYPEMAP.items())
@@ -163,6 +163,12 @@ class Structural(Object, Type, Namable):
         raise ValueError('Expected dictionary argument, got %s' % repr(arg))
       self._update_schema_data(**arg)
     self._update_schema_data(**copy.copy(kw))
+
+    # 5.3 -> 4.7
+    self._self_scope = Environment(dict((key, value)
+        for (key, value) in self._schema_data.items()
+        if value is not Empty))
+
     super(Structural, self).__init__()
 
   def get(self):
@@ -236,12 +242,8 @@ class Structural(Object, Type, Namable):
   def _cast_scopes_to_child(cls, scopes):
     return tuple(Environment({'super': scope}) for scope in scopes)
 
-  def _self_scope(self):
-    return Environment(dict((key, value) for (key, value) in self._schema_data.items()
-                       if value is not Empty))
-
   def scopes(self):
-    self_scope = self._self_scope()
+    self_scope = self._self_scope
     return (Environment({'self': self_scope}), self_scope,) + self._scopes + (
         self._cast_scopes_to_child(self._scopes))
 
